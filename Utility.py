@@ -17,7 +17,7 @@ Eref={'CH3OH': -693.7189669146002,
       'C'    : -163.83140399439753   #E(CO) - E(O)
       }
 
-def CollectInputData(folder):
+def CollectInputNames(folder):
     file_list = os.listdir(folder)
     copy_file_list = deepcopy(file_list)
     for file_i in copy_file_list:

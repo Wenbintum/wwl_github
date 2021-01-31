@@ -1,14 +1,13 @@
 
 #%%
 from wwl import wwl
-from Utility import CollectInputData,get_catkit_attribute
-from ase.io import read, write
-from Processdata import Collect_graph, Collect_node_attributes, CollectDatatoPandas, Collect_ads_energies
-import igraph as ig
-from Analyzer import KF_validation, plt_distribution
+from Utility import CollectInputNames
+database_path = 'Data/Cu_718_filter/'
+file_names  = CollectInputNames(database_path)
 
 
-database_path = 'tmp/database_Cu_761/'
+
+#%%
 file_names  = CollectInputData(database_path)
 
 graphs = Collect_graph(database_path, cutoff_mult=1, weighted=False, skin=0.1)

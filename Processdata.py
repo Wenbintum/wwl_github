@@ -1,12 +1,39 @@
-from ase import neighborlist
-#from ase.data import atomic_numbers, atomic_masses, covalent_radii
-from ase.io import read, write
-import numpy as np
-from Utility import Constant,Adsorption_energy,CollectInputData,get_node_attribute, Spherical_hamonics_1To6
-import igraph as ig
-import pandas as pd
-from ase.data import covalent_radii
-import os
+# from ase import neighborlist
+# #from ase.data import atomic_numbers, atomic_masses, covalent_radii
+# from ase.io import read, write
+# import numpy as np
+# from Utility import Constant,Adsorption_energy,CollectInputData,get_node_attribute, Spherical_hamonics_1To6
+# import igraph as ig
+# import pandas as pd
+# from ase.data import covalent_radii
+# import os
+
+
+class GraphBase():
+    def __init__(self):
+        pass
+    
+    
+    
+    @classmethod
+    def Collect_graph(cls, database_path, cutoff_mult=1, weighted=False, skin=0.1):
+        
+        
+        
+    def Collect_graph(database_path, cutoff_mult=1, weighted = False, skin=0.3):
+        graphs = []
+        file_list  = CollectInputData(database_path)
+        for i, file_i in enumerate(file_list):
+            atoms = read(database_path + file_i)
+            #DeleteFixAtoms(atoms) #wenbin
+            adj_matrix = Node_representation(atoms, cutoff_mult=cutoff_mult, skin=skin)
+            graph = Create_graph(adj_mat=adj_matrix)
+            if weighted == True:
+                graph = Assign_Edge_weight(atoms,graph,database_path+file_i)
+            graphs.append(graph)
+        return graphs
+
+
 
 def Node_representation(atoms, cutoff_mult=1, skin=0.3):    #adjacency matrix
     cutoff       = neighborlist.natural_cutoffs(atoms,mult=cutoff_mult)
@@ -19,18 +46,18 @@ def Create_graph(adj_mat):
     g = ig.Graph.Adjacency(adj_mat.tolist(), mode='undirected')
     return g
 
-def Collect_graph(database_path, cutoff_mult=1, weighted = False, skin=0.3):
-    graphs = []
-    file_list  = CollectInputData(database_path)
-    for i, file_i in enumerate(file_list):
-        atoms = read(database_path + file_i)
-        #DeleteFixAtoms(atoms) #wenbin
-        adj_matrix = Node_representation(atoms, cutoff_mult=cutoff_mult, skin=skin)
-        graph = Create_graph(adj_mat=adj_matrix)
-        if weighted == True:
-            graph = Assign_Edge_weight(atoms,graph,database_path+file_i)
-        graphs.append(graph)
-    return graphs
+# def Collect_graph(database_path, cutoff_mult=1, weighted = False, skin=0.3):
+#     graphs = []
+#     file_list  = CollectInputData(database_path)
+#     for i, file_i in enumerate(file_list):
+#         atoms = read(database_path + file_i)
+#         #DeleteFixAtoms(atoms) #wenbin
+#         adj_matrix = Node_representation(atoms, cutoff_mult=cutoff_mult, skin=skin)
+#         graph = Create_graph(adj_mat=adj_matrix)
+#         if weighted == True:
+#             graph = Assign_Edge_weight(atoms,graph,database_path+file_i)
+#         graphs.append(graph)
+#     return graphs
 def Cal_Edge_weight(atoms, atom_i, atom_j):
     if atom_i == atom_j:
         return 1

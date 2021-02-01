@@ -1,32 +1,33 @@
 
 #%%
 from wwl import wwl
-from Utility import CollectInputNames
-database_path = 'Data/Cu_718_filter/'
-file_names  = CollectInputNames(database_path)
+from Utility import CollectInputNames, get_catkit_attribute
+from Processdata import GraphBase, GraphGroup, CollectDatatoPandas
+import os
+
+database_path   = 'Data/Cu_718_filter/'
+feature_list    = ['atomic_number']
 
 
 
+#*single graph test
+# file_abspath = os.path.abspath(database_path + 'slab-Cu_111_334#O-mono_2.traj')  #one single example
+# import ase.io
+# graph_i = GraphBase()
+# graph_i.atoms = ase.io.read(file_abspath)
+
+graphs_object   = GraphGroup(database_path, cutoff_mult=1, weighted=False, skin=0.1)
+
+file_names      = CollectInputNames(database_path)
+graphs          = graphs_object.Collect_graph()
+catkit_pool     = get_catkit_attribute()
+node_attributes = graphs_object.Collect_node_attributes(feature_list, attributes_pool=catkit_pool, normalize=True)
+ads_energies    = graphs_object.Collect_ads_energies()
+datas           = CollectDatatoPandas(graphs, ads_energies, file_names)
+#* plot distribution
+# from Analyzer import plt_distribution
+# plt_distribution(datas['target'], n_bin=20, dpi=100)
 #%%
-file_names  = CollectInputData(database_path)
-
-graphs = Collect_graph(database_path, cutoff_mult=1, weighted=False, skin=0.1)
-catkit_attr = get_catkit_attribute()  #catkit feature library 
-
-
-feature_list  = ['Local_parameter', 'vdw_radius', 'electron_affinity']
-# feature_list = ['atomic_number']
-# feature_list = ['PE', 'EA', 'IE', 'GP']
-#feature_list = ['atomic_number','atomic_volume','electron_affinity',
-                #'en_pauling' , 'dband_center_bulk', 'heat_of_formation', 'lattice_constant', 'dband_width_bulk']
-
-node_attributes = Collect_node_attributes(database_path, feature_list=feature_list, 
-                                        attr_pool=catkit_attr, normalize=True)
-ads_energies = Collect_ads_energies(database_path)
-datas = CollectDatatoPandas(graphs,ads_energies,file_names)
-
-    # plt_distribution(datas['target'], n_bin=20, dpi=100)
-    # train_RMSEs,train_MAEs,test_RMSEs,test_MAEs =[],[],[],[]
     
 train_RMSEs,train_MAEs,test_RMSEs,test_MAEs =[],[],[],[]
 for iter in range(1,2):

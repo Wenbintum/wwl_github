@@ -6,7 +6,7 @@ import pkg_resources
 import json
 from scipy.special import sph_harm
 import warnings
-database_path = 'tmp/database_Cu_761/'
+
 #reference energy: adsorbate + clean surface
 #adsorbate will be calculated by the numbers of atomic numer in Atoms project   
 Eref={'CH3OH': -693.7189669146002,
@@ -25,12 +25,11 @@ def CollectInputNames(folder):
             file_list.remove(file_i)
     return file_list
             
-def Ref_adsorbate(structure):
+def Ref_adsorbate(database_path,structure):
     """
     docstring
     """
-    pass
-    global Eref, database_path
+    global Eref
     atoms = read(database_path + structure)
     numbers_list = atoms.get_atomic_numbers()
     for i in numbers_list:
@@ -43,7 +42,7 @@ def Ref_adsorbate(structure):
     Ereference = nH * Eref['H'] + nC * Eref['C'] + nO * Eref['O']
     return Ereference
 
-def Ref_cleansurface(structure):
+def Ref_cleansurface(database_path,structure):
     """[summary]
 
     Args:
@@ -55,7 +54,6 @@ def Ref_cleansurface(structure):
     Returns:
         [type]: [description]
     """
-    global database_path
     slab_name = structure.split('#')[0].split('-')[1]
     traj_name = database_path + slab_name + '.traj'
     if not os.path.exists(traj_name):
@@ -64,20 +62,13 @@ def Ref_cleansurface(structure):
     Ereference = atoms.get_potential_energy()
     return Ereference
     
-def Total_surface(structure):
-    global database_path
+def Total_surface(database_path, structure):
     atoms=read(database_path+structure)
     return atoms.get_potential_energy()
 
-def Adsorption_energy(structure):
-    return Total_surface(structure) - Ref_adsorbate(structure) - Ref_cleansurface(structure)
-
-#GP: group  PE: electronegativity IE: ionization energy  EA electronaffinity
-Constant= {'C':{'PE' : 2.55,'EA' : 1.60, 'IE': 11.26, 'GP': 14},
-           'O':{'PE' : 3.44,'EA' : 1.46, 'IE': 13.62, 'GP': 16},
-           'H':{'PE' : 2.20,'EA' : 0.75, 'IE': 13.60, 'GP': 1},
-           'Rh':{'PE': 2.28,'EA' : 1.14, 'IE': 7.46,  'GP': 9}
-          }
+def Adsorption_energy(database_path, structure):
+    return Total_surface(database_path, structure) - Ref_adsorbate(database_path, structure) -\
+           Ref_cleansurface(database_path, structure)
 
 def get_catkit_attribute():
     path = pkg_resources.resource_filename('catkit', 'data/properties.json')
@@ -85,23 +76,7 @@ def get_catkit_attribute():
         data = json.load(f)
     return data
 
-def get_node_attribute(atom_index, name_attribute,attr_pool):
-    # path = pkg_resources.resource_filename('catkit', 'data/properties.json')
-    # with open(path, 'r') as f:
-    #     data = json.load(f)
-    data = attr_pool
-    if name_attribute not in data.keys():
-        #check hamonics
-        raise NameError('No such attribute in Catkit repository')
-    else:
-        # #print(atom_index)
-        if np.isnan(data[name_attribute][atom_index]) == True:
-            #node_attribute = np.nan
-            node_attribute = 0
-            
-        else:
-            node_attribute = data[name_attribute][atom_index]
-    return node_attribute
+
 
 
 #list of node attribute

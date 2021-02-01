@@ -14,7 +14,7 @@ def plt_distribution(x, n_bin, dpi=100):
     axs.set_ylabel('Numbers')
     # axs[1].hist(x, bins=n_bin, density=True)
     # axs[1].yaxis.set_major_formatter(PercentFormatter(xmax=1))
-    plt.savefig('distribution.png',dpi=dpi)
+    plt.savefig('Result/distribution.png',dpi=dpi)
 
 def Check_outlier(target,prediction,name_list,threshold=0.5):
     outlier_list = {}

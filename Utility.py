@@ -76,14 +76,7 @@ def get_catkit_attribute():
         data = json.load(f)
     return data
 
-
-
-
-#list of node attribute
-#atomic numbers: AN, atomic radius: AR, d-band properties of pure metals, dbp
-#electron affinity: EA,  ionization potential, IP,  Dipole polarizability, DP
-# heat of formation, HE,  electronegativitym  PE,  coordination number, CN, van der waals, VDW
-
+#Todo local order parameter
 def Spherical_hamonics_1To6(atom_index, atoms, graph, file_i):   #l= 1,2,3,4,5,6
     neighbors_coordinate=[]
     print(file_i, atom_index)

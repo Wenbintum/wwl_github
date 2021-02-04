@@ -17,6 +17,7 @@ def CollectDatatoPandas(graphs,target,name=None):
 def get_node_attribute(atom_index, feature_i, attributes_pool):
     
     if np.isnan(attributes_pool[feature_i][atom_index]) == True:
+        #raise ValueError('Node_attribute is NAN type')
         node_attribute = np.nan
     else:
         node_attribute = attributes_pool[feature_i][atom_index]

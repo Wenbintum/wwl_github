@@ -123,15 +123,7 @@ class GraphGroup(GraphBase):
         # normed_conc_attributes[np.isnan(normed_conc_attributes)] = 2 #sign an outlier value for nan 
         normed_node_attributes = np.array_split(normed_conc_attributes, indexlist[:-1])
         return np.array(normed_node_attributes)
-            
-            
-            
-            
-            
-            
-            
-            
-            
+    
 #Todo
 def Cal_Edge_weight(atoms, atom_i, atom_j):
     if atom_i == atom_j:

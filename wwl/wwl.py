@@ -63,7 +63,7 @@ def pairwise_wasserstein_distance(X, node_features = None, num_iterations=3, sin
         for g in X:
             if not 'label' in g.vs.attribute_names():
                 print('No label attributed to graphs, use degree instead and use CONTINUOUS propagation scheme.')
-                categorical = False
+                categorical = False 
                 break
         if categorical:
             print('Categorically-labelled graphs, using CATEGORICAL propagation scheme.')

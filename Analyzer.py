@@ -6,6 +6,7 @@ from ML_learning import Train_gpr, Train_krr
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from statistics import mean
 import plotly.graph_objects as go
+from sklearn.decomposition import KernelPCA
 
 def plt_distribution(x, n_bin, dpi=100):
     fig, axs = plt.subplots(tight_layout=True)
@@ -61,6 +62,55 @@ def plt_partial(real, pre, text):
                          )
     
     fig.show()
+
+def plt_kpca(kernel_matrix, y, name_list=None):
+    kpca = KernelPCA(kernel='precomputed', n_components=2)
+    x_kpca = kpca.fit_transform(kernel_matrix)
+    colors  = y
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=x_kpca[:,0], y=x_kpca[:,1], mode='markers',hovertext=name_list,
+                             marker=dict(
+                                 size=10,
+                                 color=colors,
+                                 colorscale="Viridis",
+                                 colorbar=dict(title="ads_energy")
+                                        )
+                             
+                             ))
+    fig.update_layout(     
+                            font = dict(
+                                        family='Times New Roman',color='black', size=22),
+                  
+                            plot_bgcolor = 'white',
+                            xaxis = dict(
+                                        title='PC1',
+                                        showline=True,
+                                        showgrid=False,
+                                        gridcolor="white",
+                                        showticklabels=False,
+                                        linecolor='black',
+                                        linewidth=2,
+                                        ticks='outside',
+                                        mirror=True,),
+
+                            yaxis = dict(
+                                        #title='<b>Bold</b> <i>animals</i>',
+                                        title='PC2',
+                                        showline=True,
+                                        showgrid=False,
+                                        gridcolor="white",
+                                        showticklabels=False,
+                                        linecolor='black',
+                                        linewidth=2,
+                                        ticks='outside',
+                                        mirror=True,)
+                         )
+    
+    fig.show()
+    fig.write_html("Result/kpca.html")
+
+
+
 
 def KF_validation(kernel_matrix, y, ML_method, name_list=None, 
                   n_split=5, shuffle=True, random_state=0

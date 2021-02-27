@@ -5,6 +5,125 @@ import numpy as np
 import igraph as ig
 import pandas as pd
 from Utility import CollectInputNames, Adsorption_energy
+import os 
+import glob
+import pickle
+from scipy.integrate import simps
+
+
+class FeatureAttribute():
+    def __init__(self, atoms=None, atoms_indexs=None, feature=None, file_i=None)
+        self.atoms = atoms
+        self.atoms_indexs = atoms_indexs
+        self.feature = feature
+        self.file_i  = file_i
+        self._initialized = False
+        #self._running = False
+        #self.results = {}
+    def __initialize__(self):
+        if not self._initialized:
+            if self.feature in self.__dict__.keys():
+                return self.self.feature
+                
+                
+            else:
+                raise TypeError('Unknown type of feature')
+    
+    def d_band_center(self):
+        feature_i_list = []
+        slab_name = file_i.split('#')[0].split('-')[1]
+        ads_name  = file_i.split('#')[1].split('-')[0]
+        slab_index = np.where(atoms_indexs > 18)[0]; ads_index = np.where(atoms_indexs < 18)[0]
+        dos_pathway = '/home/wenbin/Calculation/graph_project/dos/'
+        #slab feature
+        with open(glob.glob(os.path.join(dos_pathway,f'{slab_name}*.pickle'))[0], 'rb') as input_file:
+            dos_energies, dos_total, pdos = pickle.load(input_file)
+            for atom_id in slab_index:
+                assert atoms_indexs[atom_id] > 18
+                states = 'd'
+                #! whether Ni Fe Co in the system, the others should also consider as spin like Cu
+                symbols = [atom.symbol for atom in atoms]
+                if 'Fe' in symbols or 'Co' in symbols or 'Ni' in symbols:
+                # if atoms[atom_id].symbol in ['Fe', 'Co', 'Ni']:
+                    summed_pdos = pdos[atom_id][states][0] + pdos[atom_id][states][1]
+                else:
+                    summed_pdos = pdos[atom_id][states][0]
+                
+                band_center = simps(summed_pdos*dos_energies,dos_energies) / simps(summed_pdos,dos_energies)
+                feature_i_list.append(band_center)
+                
+        with open(glob.glob(os.path.join(dos_pathway,f'{ads_name}-*.pickle'))[0], 'rb') as input_file:
+            dos_energies, dos_total, pdos = pickle.load(input_file)
+            #TODO whether atom index of molecule corresponds to surface after minus constant
+            for atom_id in ads_index:
+                
+                assert atoms_indexs[atom_id] < 18
+                if atoms[atom_id].symbol == 'C' or atoms[atom_id].symbol == 'O':
+                    states = 'p'
+                elif atoms[atom_id].symbol == 'H':
+                    states = 's'
+                #! change to the index in molecule
+                atom_id = atom_id - len(slab_index)
+                print(pdos[atom_id]['s'].max())
+                print(atom_id)
+                summed_pdos = pdos[atom_id][states][0] + pdos[atom_id][states][1]
+                band_center = simps(summed_pdos*dos_energies,dos_energies) / simps(summed_pdos,dos_energies)
+                feature_i_list.append(band_center)
+        return feature_i_list        
+        
+        
+        
+    def __call__(self):
+        return self.__initialize_()
+        
+        
+        
+    
+# def get_feature_attribute(atoms, atoms_indexs, feature, file_i):
+#     print(file_i)
+#     feature_i_list = []
+#     slab_name = file_i.split('#')[0].split('-')[1]
+#     ads_name  = file_i.split('#')[1].split('-')[0]
+    
+#     slab_index = np.where(atoms_indexs > 18)[0]; ads_index = np.where(atoms_indexs < 18)[0]
+#     dos_pathway = '/home/wenbin/Calculation/graph_project/dos/'
+    
+#     #slab feature
+#     with open(glob.glob(os.path.join(dos_pathway,f'{slab_name}*.pickle'))[0], 'rb') as input_file:
+#         dos_energies, dos_total, pdos = pickle.load(input_file)
+#         for atom_id in slab_index:
+#             assert atoms_indexs[atom_id] > 18
+#             states = 'd'
+#             #! whether Ni Fe Co in the system, the others should also consider as spin like Cu
+#             symbols = [atom.symbol for atom in atoms]
+#             if 'Fe' in symbols or 'Co' in symbols or 'Ni' in symbols:
+#             # if atoms[atom_id].symbol in ['Fe', 'Co', 'Ni']:
+#                 summed_pdos = pdos[atom_id][states][0] + pdos[atom_id][states][1]
+#             else:
+#                 summed_pdos = pdos[atom_id][states][0]
+            
+#             band_center = simps(summed_pdos*dos_energies,dos_energies) / simps(summed_pdos,dos_energies)
+#             feature_i_list.append(band_center)
+    
+#     with open(glob.glob(os.path.join(dos_pathway,f'{ads_name}-*.pickle'))[0], 'rb') as input_file:
+#         dos_energies, dos_total, pdos = pickle.load(input_file)
+#         #TODO whether atom index of molecule corresponds to surface after minus constant
+#         for atom_id in ads_index:
+            
+#             assert atoms_indexs[atom_id] < 18
+#             if atoms[atom_id].symbol == 'C' or atoms[atom_id].symbol == 'O':
+#                 states = 'p'
+#             elif atoms[atom_id].symbol == 'H':
+#                 states = 's'
+#             #! change to the index in molecule
+#             atom_id = atom_id - len(slab_index)
+#             print(pdos[atom_id]['s'].max())
+#             print(atom_id)
+#             summed_pdos = pdos[atom_id][states][0] + pdos[atom_id][states][1]
+#             band_center = simps(summed_pdos*dos_energies,dos_energies) / simps(summed_pdos,dos_energies)
+#             feature_i_list.append(band_center)
+#     return feature_i_list    
+    
 
 def CollectDatatoPandas(graphs,target,name=None):
     column_names = ['graphs','target','name']
@@ -57,21 +176,37 @@ class GraphBase():
         g = ig.Graph.Adjacency(self._node_representation().tolist(), mode='undirected')
         return g
     
-    def Node_attributes(self, feature_list, attributes_pool):
+    def Node_attributes(self, feature_list, attributes_pool, file_i):
         #Todo local order parameter
         atoms_indexs = self.atoms.get_atomic_numbers()
         node_attributes = {}
-        for i, atom_index in enumerate(atoms_indexs):
-            node_attributes[i] = []
-            for feature in feature_list:
-                if feature in attributes_pool.keys():
-                    node_attributes[i].append(get_node_attribute(atom_index, feature, attributes_pool))
-                # elif feature == 'Local_parameter':
-                #     node_attributes[i].extend(Spherical_hamonics_1To6(i, atoms, graph, file_i))
-                else:
-                    raise NameError('UNKNOWN FEATURE')
-                #print(node_attributes[i])
-        return np.array(list(node_attributes.values()))
+        feature_attributes = {}
+        for feature in feature_list:
+            feature_attributes[feature] = []
+            if feature in attributes_pool.keys():
+                for i, atom_index in enumerate(atoms_indexs):
+                    feature_attributes[feature].append(get_node_attribute(atom_index, feature, attributes_pool))
+            else:
+                #this will return a list of feature vector of all atoms in the structure
+                # feature_attributes[feature] = get_feature_attribute(self.atoms, atoms_indexs, feature, file_i)
+                feature_attributes[feature] = FeatureAttribute(self.atoms, atoms_indexs, feature, file_i)
+            # else:
+            #     raise NameError('UNKNOWN FEATURE')
+        return np.array(list(map(list,zip(*feature_attributes.values()))))
+        
+        
+        # for i, atom_index in enumerate(atoms_indexs):
+        #     node_attributes[i] = []
+        #     for feature in feature_list:
+        #         if feature in attributes_pool.keys():
+        #             node_attributes[i].append(get_node_attribute(atom_index, feature, attributes_pool))
+        #         # elif feature == 'Local_parameter':
+        #         #     node_attributes[i].extend(Spherical_hamonics_1To6(i, atoms, graph, file_i))
+        #         else:
+        #             raise NameError('UNKNOWN FEATURE')
+        #         #print(node_attributes[i])
+        
+        # return np.array(list(node_attributes.values()))
         
 class GraphGroup(GraphBase):
     
@@ -99,7 +234,7 @@ class GraphGroup(GraphBase):
         for i, file_i in enumerate(self.file_list):
             self.atoms = ase.io.read(self.database_path + file_i)
             #atoms = DeleteFixAtoms(atoms) #wenbin
-            attribute_graph_i = self.Node_attributes(feature_list=feature_list, attributes_pool=attributes_pool)
+            attribute_graph_i = self.Node_attributes(feature_list=feature_list, attributes_pool=attributes_pool, file_i=file_i)
             sum_node_attributes.append(attribute_graph_i)
             
         if normalize:
@@ -166,10 +301,6 @@ def Assign_Edge_weight(atoms, graph, file_name):
 
 
     
-
-
-
-
 def DeleteFixAtoms(atoms):
     fix_indexs = atoms.constraints[0].get_indices()
     del atoms[fix_indexs]

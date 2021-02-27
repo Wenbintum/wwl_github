@@ -6,20 +6,26 @@ from Processdata import GraphBase, GraphGroup, CollectDatatoPandas
 import os
 from Analyzer import KF_validation
 import time
+import random
 
-
-t_time = time.time()
-
-database_path   = 'Data/Cu_new_201/'
-feature_list    = ['atomic_number','en_pauling']#,'atomic_radius']
-
+database_path   = 'Data/simple_example/'
+# feature_list = ['electron_affinity', 'vdw_radius']#,'atomic_number'] #0.280
+feature_list = ['atomic_number','band_center'] #'electron_affinity', 'vdw_radius', 'electron_affinity',
+# feature_pool= ['atomic_number','en_pauling','atomic_volume','atomic_weight','boiling_point','group_id','period','density'
+#  ,'electron_affinity','vdw_radius']
+# numbers = [2,3,4,5,6,7,8,9,10]
+# for number in numbers:
+# collect_time=[]
+# collect_number=[]
+# for number in [50,100,150,200,250,300,350,400,450,500,550,600]:
+# t_time = time.time()
+# feature_list =  random.sample(feature_pool, number)
 #*single graph test
 # file_abspath = os.path.abspath(database_path + 'slab-Cu_111_334#O-mono_2.traj')  #one single example
 # import ase.io
 # graph_i = GraphBase()
 # graph_i.atoms = ase.io.read(file_abspath)
 graphs_object   = GraphGroup(database_path, cutoff_mult=1, weighted=False, skin=0.1)
-
 file_names      = CollectInputNames(database_path)
 graphs          = graphs_object.Collect_graph()
 catkit_pool     = get_catkit_attribute()
@@ -27,18 +33,28 @@ node_attributes = graphs_object.Collect_node_attributes(feature_list, attributes
 ads_energies    = graphs_object.Collect_ads_energies()
 datas           = CollectDatatoPandas(graphs, ads_energies, file_names)
 
+# graphs = graphs[:number]; node_attributes=node_attributes[:number]; datas=datas[:number]
+
+#%%
+#! to generate different number of configurations
 kernel_matrix = wwl(graphs, node_features=node_attributes, num_iterations=1, sinkhorn=False, gamma=None)
+print(kernel_matrix)
 
+for gaussian_alpha in [0.001, 0.0006, 0.0008, 0.0005, 0.0004]:
+    # kernel_matrix = wwl(graphs, node_features=node_attributes, num_iterations=1, sinkhorn=False, gamma=None)
+    KF_validation(kernel_matrix=kernel_matrix, y=datas['target'], name_list=datas['name'], 
+                ML_method={'ml':'gpr', 'alpha':gaussian_alpha, 'normalize_y':False},
+                    n_split=5, shuffle=True, random_state=0)
 
-# kernel_matrix = wwl(graphs, node_features=node_attributes, num_iterations=1, sinkhorn=False, gamma=None)
-KF_validation(kernel_matrix=kernel_matrix, y=datas['target'], name_list=datas['name'], ML_method='gpr',
-                n_split=5, shuffle=True, random_state=0)
-print(KF_validation.avr_train_MAE)
-print(KF_validation.avr_train_RMSE)
-print(KF_validation.avr_test_MAE)
-print(KF_validation.avr_test_RMSE)
-
-print('time:', round(time.time() - t_time,4))
+    print(KF_validation.avr_train_MAE)
+    print(KF_validation.avr_train_RMSE)
+    print(KF_validation.avr_test_MAE)
+    print(KF_validation.avr_test_RMSE)
+    print('\n')
+print('time:', round(time.time() - t_time,4), 'number:', number)
+collect_number.append(number)
+collect_time.append(round(time.time() - t_time,4))
+#print('number:', number,  'time:', round(time.time() - t_time,4))
 # # from Analyzer import plt_partial
 # # plt_partial(KF_validation.test_real, KF_validation.test_pre, KF_validation.test_name)
 # from Analyzer import plt_kpca

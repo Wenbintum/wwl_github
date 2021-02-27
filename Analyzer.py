@@ -128,10 +128,10 @@ def KF_validation(kernel_matrix, y, ML_method, name_list=None,
         y_train, y_test = y[train_index], y[test_index]
         name_train, name_test = name_list[train_index], name_list[test_index] #outlier
         #train a model
-        if ML_method == 'gpr':
-            ml_model = Train_gpr(train_matrix, y_train)
-        if ML_method == 'krr':
-            ml_model = Train_krr(train_matrix, y_train)   
+        if ML_method['ml'] == 'gpr':
+            ml_model = Train_gpr(train_matrix, y_train, **ML_method)
+        if ML_method['ml'] == 'krr':
+            ml_model = Train_krr(train_matrix, y_train, **ML_method)   
         #predict training and validation
         train_pre = ml_model.predict(train_matrix)
         test_pre  = ml_model.predict(test_matrix)

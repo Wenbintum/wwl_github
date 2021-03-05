@@ -8,9 +8,10 @@ from Analyzer import KF_validation
 import time
 import random
 
-database_path   = 'Data/simple_example/'
-# feature_list = ['electron_affinity', 'vdw_radius']#,'atomic_number'] #0.280
-feature_list = ['atomic_number','band_center'] #'electron_affinity', 'vdw_radius', 'electron_affinity',
+database_path   = 'Data/small_adsorbate/'
+feature_list = ['electron_affinity','vdw_radius','surface_band_center','d_band_center','HOMO','GAP','label_sites']
+
+# feature_list = ['atomic_number','label_sites','d_band_center','HOMO','GAP','surface_band_center'] #'electron_affinity', 'vdw_radius', 'electron_affinity',
 # feature_pool= ['atomic_number','en_pauling','atomic_volume','atomic_weight','boiling_point','group_id','period','density'
 #  ,'electron_affinity','vdw_radius']
 # numbers = [2,3,4,5,6,7,8,9,10]
@@ -37,26 +38,27 @@ datas           = CollectDatatoPandas(graphs, ads_energies, file_names)
 
 #%%
 #! to generate different number of configurations
-kernel_matrix = wwl(graphs, node_features=node_attributes, num_iterations=1, sinkhorn=False, gamma=None)
-print(kernel_matrix)
+for iter in [1]:
+    kernel_matrix = wwl(graphs, node_features=node_attributes, num_iterations=iter, sinkhorn=False, gamma=None)
+    # print(kernel_matrix)
+    for gaussian_alpha in [0.0004]:#, 0.001]:
+    # for gaussian_alpha in [0.001, 0.0006, 0.0008, 0.0005, 0.0004]:
+        # kernel_matrix = wwl(graphs, node_features=node_attributes, num_iterations=1, sinkhorn=False, gamma=None)
+        KF_validation(kernel_matrix=kernel_matrix, y=datas['target'], name_list=datas['name'], 
+                    ML_method={'ml':'gpr', 'alpha':gaussian_alpha, 'normalize_y':False},
+                        n_split=5, shuffle=True, random_state=0)
 
-for gaussian_alpha in [0.001, 0.0006, 0.0008, 0.0005, 0.0004]:
-    # kernel_matrix = wwl(graphs, node_features=node_attributes, num_iterations=1, sinkhorn=False, gamma=None)
-    KF_validation(kernel_matrix=kernel_matrix, y=datas['target'], name_list=datas['name'], 
-                ML_method={'ml':'gpr', 'alpha':gaussian_alpha, 'normalize_y':False},
-                    n_split=5, shuffle=True, random_state=0)
-
-    print(KF_validation.avr_train_MAE)
-    print(KF_validation.avr_train_RMSE)
-    print(KF_validation.avr_test_MAE)
-    print(KF_validation.avr_test_RMSE)
-    print('\n')
-print('time:', round(time.time() - t_time,4), 'number:', number)
-collect_number.append(number)
-collect_time.append(round(time.time() - t_time,4))
+        print(KF_validation.avr_train_MAE)
+        print(KF_validation.avr_train_RMSE)
+        print(KF_validation.avr_test_MAE)
+        print(KF_validation.avr_test_RMSE)
+        print('\n')
+# print('time:', round(time.time() - t_time,4), 'number:', number)
+# collect_number.append(number)
+# collect_time.append(round(time.time() - t_time,4))
 #print('number:', number,  'time:', round(time.time() - t_time,4))
-# # from Analyzer import plt_partial
-# # plt_partial(KF_validation.test_real, KF_validation.test_pre, KF_validation.test_name)
+from Analyzer import plt_partial
+plt_partial(KF_validation.test_real, KF_validation.test_pre, KF_validation.test_name)
 # from Analyzer import plt_kpca
 # plt_kpca(kernel_matrix=kernel_matrix, y=datas['target'], name_list=datas['name'])
 

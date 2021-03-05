@@ -4,7 +4,7 @@
 #
 # License: BSD 3 clause
 # Modified by Andrew S. Rosen to allow precomputed kernels
-
+# Modified by Mike, wenbin to allow cov and std for precomputed kernels
 import warnings
 from operator import itemgetter
 
@@ -246,7 +246,7 @@ class GaussianProcessRegressor(MultiOutputMixin,
         self.alpha_ = cho_solve((self.L_, True), self.y_train_)  # Line 3
         return self
 
-    def predict(self, X, return_std=False, return_cov=False):
+    def predict(self, X, kyy=None, return_std=False, return_cov=False):
         """Predict using the Gaussian process regression model
         We can also predict based on an unfitted model by using the GP prior.
         In addition to the mean of the predictive distribution, also its
@@ -309,9 +309,13 @@ class GaussianProcessRegressor(MultiOutputMixin,
             y_mean = K_trans.dot(self.alpha_)  # Line 4 (y_mean = f_star)
             y_mean = self._y_train_mean + y_mean  # undo normal.
             if return_cov:
+                
                 v = cho_solve((self.L_, True), K_trans.T)  # Line 5
+                # import pdb; pdb.set_trace()
+                # print(v)
                 if self.kernel == 'precomputed':
-                    y_cov = X - K_trans.dot(v)
+                    assert kyy is not None,('you must provide kyy matrix when kernel=precomputed') #wenbin
+                    y_cov = kyy - K_trans.dot(v)
                 else:
                     y_cov = self.kernel_(X) - K_trans.dot(v)  # Line 6
                 return y_mean, y_cov
@@ -326,7 +330,8 @@ class GaussianProcessRegressor(MultiOutputMixin,
 
                 # Compute variance of predictive distribution
                 if self.kernel == 'precomputed':
-                    y_var = np.copy(np.diag(X))
+                    assert kyy is not None,('you must provide kyy matrix when kernel=precomputed') #wenbin
+                    y_var = np.copy(np.diag(kyy))
                 else:
                     y_var = self.kernel_.diag(X)
                 y_var -= np.einsum("ij,ij->i",
